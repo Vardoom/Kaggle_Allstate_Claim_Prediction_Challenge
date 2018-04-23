@@ -51,8 +51,10 @@ def save_model(mod_name, alg, cv_res):
 
 
 def model_grid_fit(est, param, d_train_x, d_train_y):
+    print("test_step 1")
     cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=4,
                              iid=False, cv=5, return_train_score=True, refit="average_precision")
+    print("test_step 2")
     cur_model.fit(d_train_x, d_train_y)
     return cur_model, cur_model.cv_results_
 
@@ -166,6 +168,7 @@ if test:
     parameters = {"max_depth": range(1, 10, 2), "min_child_weight": range(0, 10, 2)}
 
     # Get the results
+    print("test_step 0")
     model, cv_results = model_grid_fit(est=estimator, param=parameters, d_train_x=train_x, d_train_y=train_y)
 
     # Save the model
