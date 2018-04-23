@@ -127,7 +127,7 @@ if test:
     # Define the model
     model = XGBClassifier(learning_rate=0.1, n_estimators=1000, max_depth=5, min_child_weight=1, gamma=0, subsample=0.8,
                           colsample_bytree=0.8, objective="binary:logistic", n_jobs=8, scale_pos_weight=1,
-                          random_state=42, silent=False)
+                          random_state=42, silent=False, kwargs={"tree_method": "gpu_hist"})
 
     # Get the results
     cv_results = model_fit(alg=model, d_train_x=train_x, d_train_y=train_y)
@@ -162,7 +162,7 @@ if test:
     # Define the model
     estimator = XGBClassifier(learning_rate=0.1, n_estimators=n_estimators, max_depth=1, min_child_weight=0, gamma=0,
                               subsample=0.8, colsample_bytree=0.8, objective='binary:logistic', n_jobs=4,
-                              scale_pos_weight=1, random_state=27, silent=False)
+                              scale_pos_weight=1, random_state=27, silent=False, kwargs={"tree_method": "gpu_hist"})
     parameters = {"max_depth": range(1, 10, 2), "min_child_weight": range(0, 10, 2)}
 
     # Get the results
