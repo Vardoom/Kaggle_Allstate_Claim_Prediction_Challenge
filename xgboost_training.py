@@ -51,10 +51,8 @@ def save_model(mod_name, alg, cv_res):
 
 
 def model_grid_fit(est, param, d_train_x, d_train_y):
-    print("test_step 1")
-    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=4,
+    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=-1,
                              iid=False, cv=5, return_train_score=True, refit="average_precision")
-    print("test_step 2")
     cur_model.fit(d_train_x, d_train_y)
     return cur_model, cur_model.cv_results_
 
@@ -99,6 +97,7 @@ def plot_curves(mod_list, d_train_y):
 
     plt.show()
 
+
 # ======================== Step 1 : Load Data ========================
 
 file_name = "train_set"
@@ -123,13 +122,14 @@ model_list = dict()
 # ======================== Step 2.1 : Test 1 ========================
 print("=>=>=> Launching test 1")
 model_name = "xgboost_1"
-test = False
+test = True
 
 if test:
     # Define the model
-    model = XGBClassifier(learning_rate=0.1, n_estimators=1000, max_depth=5, min_child_weight=1, gamma=0, subsample=0.8,
-                          colsample_bytree=0.8, objective="binary:logistic", n_jobs=8, scale_pos_weight=1,
-                          random_state=42, silent=False, kwargs={"tree_method": "gpu_hist"})
+    xgb_params = {"learning_rate": 0.1, "n_estimators": 1000, "max_depth": 5, "min_child_weight": 1, "gamma": 0,
+                  "subsample": 0.8, "colsample_bytree": 0.8, "objective": "binary:logistic", "scale_pos_weight": 1,
+                  "random_state": 42, "silent": False, "n_jobs": 8, "tree_method": "gpu_hist"}
+    model = XGBClassifier(**xgb_params)
 
     # Get the results
     cv_results = model_fit(alg=model, d_train_x=train_x, d_train_y=train_y)
@@ -162,13 +162,13 @@ test = True
 
 if test:
     # Define the model
-    estimator = XGBClassifier(learning_rate=0.1, n_estimators=n_estimators, max_depth=1, min_child_weight=0, gamma=0,
-                              subsample=0.8, colsample_bytree=0.8, objective='binary:logistic', n_jobs=4,
-                              scale_pos_weight=1, random_state=27, silent=False, kwargs={"tree_method": "gpu_hist"})
+    xgb_params = {"learning_rate": 0.1, "n_estimators": n_estimators, "max_depth": 1, "min_child_weight": 0, "gamma": 0,
+                  "subsample": 0.8, "colsample_bytree": 0.8, "objective": "binary:logistic", "scale_pos_weight": 1,
+                  "random_state": 27, "silent": False, "tree_method": "gpu_hist", "predictor": "gpu_predictor"}
+    estimator = XGBClassifier(**xgb_params)
     parameters = {"max_depth": range(1, 10, 2), "min_child_weight": range(0, 10, 2)}
 
     # Get the results
-    print("test_step 0")
     model, cv_results = model_grid_fit(est=estimator, param=parameters, d_train_x=train_x, d_train_y=train_y)
 
     # Save the model
