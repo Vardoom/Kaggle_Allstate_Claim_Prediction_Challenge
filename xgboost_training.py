@@ -51,7 +51,7 @@ def save_model(mod_name, alg, cv_res):
 
 
 def model_grid_fit(est, param, d_train_x, d_train_y):
-    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=-1,
+    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=4,
                              iid=False, cv=5, return_train_score=True, refit="average_precision")
     cur_model.fit(d_train_x, d_train_y)
     return cur_model, cur_model.cv_results_
