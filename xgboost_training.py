@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.metrics import roc_auc_score, average_precision_score, accuracy_score
-from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV
+from sklearn.model_selection import KFold, GridSearchCV
 from xgboost.sklearn import XGBClassifier
 import xgboost as xgb
 import pickle
@@ -27,7 +27,7 @@ def model_fit(alg, d_train_x, d_train_y, cv_folds=5, early_stopping_rounds=50):
     xgb_param = alg.get_xgb_params()
     xg_train = xgb.DMatrix(d_train_x, label=d_train_y)
     cv_result = xgb.cv(xgb_param, xg_train, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
-                       metrics='map', early_stopping_rounds=early_stopping_rounds)
+                       metrics='map', early_stopping_rounds=early_stopping_rounds, folds=KFold)
 
     alg.set_params(n_estimators=cv_result.shape[0])
 
@@ -121,7 +121,7 @@ model_list = dict()
 # ======================== Step 2.1 : Test 1 ========================
 print("=>=>=> Launching test 1")
 model_name = "xgboost_1"
-test = False
+test = True
 
 if test:
     # Define the model
@@ -156,7 +156,7 @@ print("Test 1 Over")
 # ======================== Step 2.2 : Test 2 ========================
 print("=>=>=> Launching test 2")
 model_name = "xgboost_2"
-test = False
+test = True
 
 if test:
     # Define the model
