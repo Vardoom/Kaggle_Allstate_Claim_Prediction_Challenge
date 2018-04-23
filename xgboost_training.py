@@ -121,7 +121,7 @@ model_list = dict()
 # ======================== Step 2.1 : Test 1 ========================
 print("=>=>=> Launching test 1")
 model_name = "xgboost_1"
-test = True
+test = False
 
 if test:
     # Define the model
