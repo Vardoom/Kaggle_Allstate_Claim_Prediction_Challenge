@@ -191,4 +191,4 @@ print("Test 2 Over")
 
 
 # Plot final results
-plot_curves(model_list, train_y)
+# plot_curves(model_list, train_y)
