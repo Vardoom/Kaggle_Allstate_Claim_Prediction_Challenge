@@ -51,7 +51,7 @@ def save_model(mod_name, alg, cv_res):
 
 
 def model_grid_fit(est, param, d_train_x, d_train_y):
-    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"], n_jobs=4,
+    cur_model = GridSearchCV(estimator=est, param_grid=param, scoring=["roc_auc", "average_precision"],
                              iid=False, cv=5, return_train_score=True, refit="average_precision")
     cur_model.fit(d_train_x, d_train_y)
     return cur_model, cur_model.cv_results_
@@ -60,9 +60,9 @@ def model_grid_fit(est, param, d_train_x, d_train_y):
 def display_param(mod_name, cv_res, alg, grid_cv=False):
     if grid_cv:
         print(model_name)
-        print("CV Results:")
-        for key in cv_results.keys():
-            print("{} : {}".format(key, cv_results[key]))
+        # print("CV Results:")
+        # for key in cv_results.keys():
+        #     print("{} : {}".format(key, cv_results[key]))
         print("Best parameters: {}".format(model.best_params_))
     else:
         print(mod_name)
@@ -122,13 +122,14 @@ model_list = dict()
 # ======================== Step 2.1 : Test 1 ========================
 print("=>=>=> Launching test 1")
 model_name = "xgboost_1"
-test = True
+test = False
 
 if test:
     # Define the model
     xgb_params = {"learning_rate": 0.1, "n_estimators": 1000, "max_depth": 5, "min_child_weight": 1, "gamma": 0,
                   "subsample": 0.8, "colsample_bytree": 0.8, "objective": "binary:logistic", "scale_pos_weight": 1,
-                  "random_state": 42, "silent": False, "n_jobs": 8, "tree_method": "gpu_hist"}
+                  "random_state": 42, "silent": False, "n_jobs": 8, "tree_method": "gpu_hist",
+                  "predictor": "gpu_predictor"}
     model = XGBClassifier(**xgb_params)
 
     # Get the results
@@ -158,13 +159,14 @@ print("Test 1 Over")
 # ======================== Step 2.2 : Test 2 ========================
 print("=>=>=> Launching test 2")
 model_name = "xgboost_2"
-test = True
+test = False
 
 if test:
     # Define the model
     xgb_params = {"learning_rate": 0.1, "n_estimators": n_estimators, "max_depth": 1, "min_child_weight": 0, "gamma": 0,
                   "subsample": 0.8, "colsample_bytree": 0.8, "objective": "binary:logistic", "scale_pos_weight": 1,
-                  "random_state": 27, "silent": False, "tree_method": "gpu_hist", "predictor": "gpu_predictor"}
+                  "n_jobs": 8, "random_state": 27, "silent": False, "tree_method": "gpu_hist",
+                  "predictor": "gpu_predictor"}
     estimator = XGBClassifier(**xgb_params)
     parameters = {"max_depth": range(1, 10, 2), "min_child_weight": range(0, 10, 2)}
 
@@ -191,6 +193,159 @@ min_child_weight = model.best_params_["min_child_weight"]
 model_list[model_name] = [model, train_pred, train_prob]
 
 print("Test 2 Over")
+
+
+# ======================== Step 2.3 : Test 3 ========================
+print("=>=>=> Launching test 3")
+model_name = "xgboost_3"
+test = False
+
+if test:
+    # Define the model
+    xgb_params = {"learning_rate": 0.1, "n_estimators": n_estimators, "max_depth": 1, "min_child_weight": 0, "gamma": 0,
+                  "subsample": 0.8, "colsample_bytree": 0.8, "objective": "binary:logistic", "scale_pos_weight": 1,
+                  "n_jobs": -1, "random_state": 27, "silent": False, "tree_method": "gpu_hist",
+                  "predictor": "gpu_predictor"}
+    estimator = XGBClassifier(**xgb_params)
+    parameters = {"max_depth": range(1, 10, 1), "min_child_weight": range(0, 10, 1)}
+
+    # Get the results
+    model, cv_results = model_grid_fit(est=estimator, param=parameters, d_train_x=train_x, d_train_y=train_y)
+
+    # Save the model
+    save_model(mod_name=model_name, alg=model, cv_res=cv_results)
+
+else:
+    # Load the model
+    model, cv_results = load_model(mod_name=model_name)
+
+# Print parameters
+display_param(mod_name=model_name, cv_res=cv_results, alg=model, grid_cv=True)
+
+# Make predictions
+train_pred, train_prob = predict_results(alg=model, d_train_x=train_x, d_train_y=train_y)
+
+# Retrieve parameters
+max_depth = model.best_params_["max_depth"]
+min_child_weight = model.best_params_["min_child_weight"]
+
+model_list[model_name] = [model, train_pred, train_prob]
+
+print("Test 3 Over")
+
+
+# ======================== Step 2.4 : Test 4 ========================
+print("=>=>=> Launching test 4")
+model_name = "xgboost_4"
+test = False
+
+if test:
+    # Define the model
+    xgb_params = {"learning_rate": 0.1, "n_estimators": n_estimators, "max_depth": max_depth,
+                  "min_child_weight": min_child_weight, "gamma": 0, "subsample": 0.8, "colsample_bytree": 0.8,
+                  "objective": "binary:logistic", "scale_pos_weight": 1, "n_jobs": -1, "random_state": 27,
+                  "silent": True, "tree_method": "gpu_hist", "predictor": "gpu_predictor"}
+    estimator = XGBClassifier(**xgb_params)
+    parameters = {"gamma": [i / 50.0 for i in range(0, 51)]}
+
+    # Get the results
+    model, cv_results = model_grid_fit(est=estimator, param=parameters, d_train_x=train_x, d_train_y=train_y)
+
+    # Save the model
+    save_model(mod_name=model_name, alg=model, cv_res=cv_results)
+
+else:
+    # Load the model
+    model, cv_results = load_model(mod_name=model_name)
+
+# Print parameters
+display_param(mod_name=model_name, cv_res=cv_results, alg=model, grid_cv=True)
+
+# Make predictions
+train_pred, train_prob = predict_results(alg=model, d_train_x=train_x, d_train_y=train_y)
+
+# Retrieve parameters
+gamma = model.best_params_["gamma"]
+
+model_list[model_name] = [model, train_pred, train_prob]
+
+print("Test 4 Over")
+
+
+# ======================== Step 2.5 : Test 5 ========================
+print("=>=>=> Launching test 5")
+model_name = "xgboost_5"
+test = False
+
+if test:
+    # Define the model
+    xgb_params = {"learning_rate": 0.1, "n_estimators": 1000, "max_depth": max_depth,
+                  "min_child_weight": min_child_weight, "gamma": gamma, "subsample": 0.8, "colsample_bytree": 0.8,
+                  "objective": "binary:logistic", "scale_pos_weight": 1, "random_state": 42, "silent": True,
+                  "n_jobs": -1, "tree_method": "gpu_hist", "predictor": "gpu_predictor"}
+    model = XGBClassifier(**xgb_params)
+
+    # Get the results
+    cv_results = model_fit(alg=model, d_train_x=train_x, d_train_y=train_y)
+
+    # Save the model
+    save_model(mod_name=model_name, alg=model, cv_res=cv_results)
+
+else:
+    # Load the model
+    model, cv_results = load_model(mod_name=model_name)
+
+# Print parameters
+display_param(mod_name=model_name, cv_res=cv_results, alg=model, grid_cv=False)
+
+# Make predictions
+train_pred, train_prob = predict_results(alg=model, d_train_x=train_x, d_train_y=train_y)
+
+# Retrieve parameters
+n_estimators = model.get_xgb_params()["n_estimators"]
+
+model_list[model_name] = [model, train_pred, train_prob]
+
+print("Test 5 Over")
+
+
+# ======================== Step 2.6 : Test 6 ========================
+print("=>=>=> Launching test 6")
+model_name = "xgboost_6"
+test = True
+
+if test:
+    # Define the model
+    xgb_params = {"learning_rate": 0.1, "n_estimators": n_estimators, "max_depth": max_depth,
+                  "min_child_weight": min_child_weight, "gamma": gamma, "subsample": 0.8, "colsample_bytree": 0.8,
+                  "objective": "binary:logistic", "scale_pos_weight": 1, "n_jobs": -1, "random_state": 27,
+                  "silent": False, "tree_method": "gpu_hist", "predictor": "gpu_predictor"}
+    estimator = XGBClassifier(**xgb_params)
+    parameters = {"subsample": [i / 50.0 for i in range(0, 50)], "colsample_bytree": [i / 50.0 for i in range(0, 50)]}
+
+    # Get the results
+    model, cv_results = model_grid_fit(est=estimator, param=parameters, d_train_x=train_x, d_train_y=train_y)
+
+    # Save the model
+    save_model(mod_name=model_name, alg=model, cv_res=cv_results)
+
+else:
+    # Load the model
+    model, cv_results = load_model(mod_name=model_name)
+
+# Print parameters
+display_param(mod_name=model_name, cv_res=cv_results, alg=model, grid_cv=True)
+
+# Make predictions
+train_pred, train_prob = predict_results(alg=model, d_train_x=train_x, d_train_y=train_y)
+
+# Retrieve parameters
+subsample = model.best_params_["subsample"]
+colsample_bytree = model.best_params_["colsample_bytree"]
+
+model_list[model_name] = [model, train_pred, train_prob]
+
+print("Test 6 Over")
 
 
 # Plot final results

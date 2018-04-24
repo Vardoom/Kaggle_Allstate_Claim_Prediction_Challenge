@@ -55,6 +55,7 @@ def main():
     i = 0
     j = 0
     for col_name in col_names:
+        print("Renaming column")
         if "_binenc" in col_name:
             data.rename({col_name: "cat_binenc_" + str(i)}, inplace=True, axis=1)
             i += 1
